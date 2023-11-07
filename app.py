@@ -1,21 +1,21 @@
-from flask import (
-    Flask, 
-    request, 
-    render_template, 
-    redirect, 
-    url_for, 
-    jsonify
-)
+import os
+from os.path import join, dirname
+from dotenv import load_dotenv
+from flask import Flask, render_template, request, jsonify, redirect, url_for
 from pymongo import MongoClient
-import requests
 from datetime import datetime
 from bson import ObjectId
 
+dotenv_path = join(dirname(__file__), '.env')
+load_dotenv(dotenv_path)
+
+MONGODB_URI = os.environ.get("MONGODB_URI")
+DB_NAME =  os.environ.get("DB_NAME")
+
+client = MongoClient(MONGODB_URI)
+db = client[DB_NAME]
+
 app = Flask(__name__)
-
-client = MongoClient('mongodb+srv://sradawiyah27:akuobi123@cluster0.j1o6zjr.mongodb.net/')
-
-db = client.dbsparta_plus_week2
 
 @app.route('/')
 def main():
@@ -49,11 +49,19 @@ def detail(keyword):
         ))
     
     if type(definitions[0]) is str:
-        suggestions = ', '.join(definitions)
+        suggestions = ', '.join([f'<a href="/detail/{sugg}">{sugg}</a>' for sugg in definitions])
         return redirect(url_for(
             'main',
             msg=f'Could not find the word, "{keyword}", did you mean one of these words:{suggestions}'
-        ))
+         ))
+
+    
+    #if type(definitions[0]) is str:
+     #   suggestions = ', '.join(definitions)
+      #  return redirect(url_for(
+       #     'main',
+        #    msg=f'Could not find the word, "{keyword}", did you mean one of these words:{suggestions}'
+        #))
 
     status = request.args.get('status_give', 'new')
     return render_template(
